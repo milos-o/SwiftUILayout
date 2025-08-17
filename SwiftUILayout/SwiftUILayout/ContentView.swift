@@ -11,6 +11,10 @@ import Foundation
 protocol View_ {
     associatedtype Body: View_
     var body: Body { get }
+    
+    // for debugging
+    associatedtype SwiftUIView: View
+    var swiftUI: SwiftUIView { get }
 }
 
 typealias RenderingContext = CGContext
@@ -30,6 +34,7 @@ extension View_ where Body == Never {
 
 extension Never: View_ {
     typealias Body = Never
+    var swiftUI: Never { fatalError("Should never be called") }
 }
 
 extension View_ {
@@ -58,14 +63,33 @@ extension Shape_ {
     var body: some View_ {
         ShapeView(shape: self)
     }
+    
+    var swiftUI: AnyShape {
+        AnyShape(shape: self)
+    }
 }
 
 extension NSColor: View_ {
     var body: some View_ {
         ShapeView(shape: Rectangle_(), color: self)
     }
+    
+    var swiftUI: some View {
+        Color(self)
+    }
 }
 
+struct AnyShape: Shape {
+    let _path: (CGRect) -> CGPath
+    
+    init<S: Shape_>(shape: S) {
+        _path = shape.path(in:)
+    }
+    
+    func path(in rect: CGRect) -> Path {
+        Path(_path(rect))
+    }
+}
 struct ShapeView<S: Shape_>: BuiltinView, View_ {
     var shape: S
     var color: NSColor = .red
@@ -80,6 +104,10 @@ struct ShapeView<S: Shape_>: BuiltinView, View_ {
         context.addPath(shape.path(in: CGRect(origin: .zero, size: size)))
         context.fillPath()
         context.restoreGState()
+    }
+    
+    var swiftUI: some View {
+        AnyShape(shape: shape)
     }
 }
 
@@ -114,6 +142,10 @@ struct FixedFrame<Content: View_>: View_, BuiltinView {
         content._render(context: context, size: childSize)
         context.restoreGState()
     }
+    
+    var swiftUI: some View {
+        content.swiftUI.frame(width: width, height: height)
+    }
 }
 
 extension View_ {
@@ -123,11 +155,12 @@ extension View_ {
 }
 
 var sample: some View_ {
-    NSColor.blue.frame(width: 200, height: 100)
+    Ellipse_()
+        .frame(width: 200, height: 100)
+        .frame(width: 300, height: 50)
 }
 
-func render<V: View_>(view: V) -> Data {
-    let size = CGSize(width: 600, height: 400)
+func render<V: View_>(view: V, size: CGSize) -> Data {
     return CGContext.pdf(size: size) { context in
         view
             .frame(width: size.width, height: size.height)
@@ -136,8 +169,19 @@ func render<V: View_>(view: V) -> Data {
 }
 
 struct ContentView: View {
+    @State var opacity: Double = 0.5
+    let size = CGSize(width: 600, height: 400)
+
     var body: some View {
-        Image(nsImage: NSImage(data: render(view: sample))!)
+        VStack {
+            ZStack {
+                Image(nsImage: NSImage(data: render(view: sample, size: size))!)
+                    .opacity(1-opacity)
+                sample.swiftUI.frame(width: size.width, height: size.height)
+                    .opacity(opacity)
+            }
+            Slider(value: $opacity, in: 0...1)
+        }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
