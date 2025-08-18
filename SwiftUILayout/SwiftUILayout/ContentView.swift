@@ -123,9 +123,18 @@ struct Ellipse_: Shape_ {
     }
 }
 
+extension Alignment_ {
+    func point(for size: CGSize) -> CGPoint {
+        let x = horizontal.alignmentID.defaultValue(in: size)
+        let y = vertical.alignmentID.defaultValue(in: size)
+        return CGPoint(x: x, y: y)
+    }
+}
+
 struct FixedFrame<Content: View_>: View_, BuiltinView {
     var width: CGFloat?
     var height: CGFloat?
+    var alignment: Alignment_
     var content: Content
     
     func size(proposed: ProposedSize) -> CGSize {
@@ -136,28 +145,111 @@ struct FixedFrame<Content: View_>: View_, BuiltinView {
     func render(context: RenderingContext, size: ProposedSize) {
         context.saveGState()
         let childSize = content._size(proposed: size)
-        let x = (size.width - childSize.width) / 2
-        let y = (size.height - childSize.height) / 2
-        context.translateBy(x: x, y: y)
+        
+        let selfPoint = alignment.point(for: size)
+        let childPoint = alignment.point(for: childSize)
+        context.translateBy(x: selfPoint.x - childPoint.x, y: selfPoint.y - childPoint.y)
         content._render(context: context, size: childSize)
         context.restoreGState()
     }
     
     var swiftUI: some View {
-        content.swiftUI.frame(width: width, height: height)
+        content.swiftUI.frame(width: width, height: height, alignment: alignment.swiftUI)
     }
 }
 
 extension View_ {
-    func frame(width: CGFloat? = nil, height: CGFloat? = nil) -> some View_ {
-        FixedFrame(width: width, height: height, content: self)
+    func frame(width: CGFloat? = nil, height: CGFloat? = nil, alignment: Alignment_ = .center) -> some View_ {
+        FixedFrame(width: width, height: height, alignment: alignment, content: self)
     }
+}
+
+struct Border<Content: View_>: View_, BuiltinView {
+    var color: NSColor
+    var width: CGFloat
+    var content: Content
+    
+    func size(proposed: ProposedSize) -> CGSize {
+        content._size(proposed: proposed)
+    }
+    
+    func render(context: RenderingContext, size: CGSize) {
+        content._render(context: context, size: size)
+        context.saveGState()
+        context.setStrokeColor(color.cgColor)
+        context.stroke(CGRect(origin: .zero, size: size).insetBy(dx: width/2, dy: width/2), width: width)
+        context.restoreGState()
+    }
+    
+    var swiftUI: some View {
+        content.swiftUI.border(Color(color), width: width)
+    }
+}
+
+extension View_ {
+    func border(_ color: NSColor, width: CGFloat) -> some View_ {
+        Border(color: color, width: width, content: self)
+    }
+}
+
+struct Alignment_ {
+    var horizontal: HorizontalAlignment_
+    var vertical: VerticalAlignment_
+    var swiftUI: Alignment {
+        Alignment(horizontal: horizontal.swiftUI, vertical: vertical.swiftUI)
+    }
+    
+    static let center = Self(horizontal: .center, vertical: .center)
+    static let topLeading = Self(horizontal: .leading, vertical: .top)
+}
+
+struct HorizontalAlignment_ {
+    var alignmentID: AlignmentID.Type
+    var swiftUI: HorizontalAlignment
+    
+    static let leading = Self(alignmentID: HLeading.self, swiftUI: .leading)
+    static let center = Self(alignmentID: HCenter.self, swiftUI: .center)
+    static let trailing = Self(alignmentID: HTrailing.self, swiftUI: .trailing)
+}
+
+struct VerticalAlignment_ {
+    var alignmentID: AlignmentID.Type
+    var swiftUI: VerticalAlignment
+    
+    static let top = Self(alignmentID: VTop.self, swiftUI: .top)
+    static let center = Self(alignmentID: VCenter.self, swiftUI: .center)
+}
+
+protocol AlignmentID {
+    static func defaultValue(in context: CGSize) -> CGFloat
+}
+
+enum VTop: AlignmentID {
+    static func defaultValue(in context: CGSize) -> CGFloat { context.height }
+}
+
+enum VCenter: AlignmentID {
+    static func defaultValue(in context: CGSize) -> CGFloat { context.height/2 }
+}
+
+enum HLeading: AlignmentID {
+    static func defaultValue(in context: CGSize) -> CGFloat { 0 }
+}
+
+enum HCenter: AlignmentID {
+    static func defaultValue(in context: CGSize) -> CGFloat { context.width/2 }
+}
+
+enum HTrailing: AlignmentID {
+    static func defaultValue(in context: CGSize) -> CGFloat { context.width }
 }
 
 var sample: some View_ {
     Ellipse_()
         .frame(width: 200, height: 100)
-        .frame(width: 300, height: 50)
+        .border(NSColor.blue, width: 2)
+        .frame(width: 300, height: 300, alignment: .topLeading)
+        .border(NSColor.yellow, width: 2)
 }
 
 func render<V: View_>(view: V, size: CGSize) -> Data {
