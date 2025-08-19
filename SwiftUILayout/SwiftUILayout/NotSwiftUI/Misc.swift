@@ -29,8 +29,58 @@ struct Border<Content: View_>: View_, BuiltinView {
     }
 }
 
+struct Overlay<Content: View_, O: View_>: View_, BuiltinView {
+    let content: Content
+    let overlay: O
+    let alignment: Alignment_
+    
+    func render(context: RenderingContext, size: CGSize) {
+        content._render(context: context, size: size)
+        let childSize = overlay._size(proposed: size)
+        context.saveGState()
+        context.align(childSize, in: size, alignment: alignment)
+        overlay._render(context: context, size: childSize)
+        context.restoreGState()
+    }
+    
+    func size(proposed: ProposedSize) -> CGSize {
+        content._size(proposed: proposed)
+    }
+    
+    var swiftUI: some View {
+        content.swiftUI.overlay(overlay.swiftUI, alignment: alignment.swiftUI)
+    }
+}
+
+struct GeometryReader_<Content: View_>: View_, BuiltinView {
+    let content: (CGSize) -> Content
+    
+    func render(context: RenderingContext, size: CGSize) {
+        let child = content(size)
+        let childSize = child._size(proposed: size)
+        context.saveGState()
+        context.align(childSize, in: size, alignment: .topLeading)
+        child._render(context: context, size: childSize)
+        context.restoreGState()
+    }
+    
+    func size(proposed: ProposedSize) -> CGSize {
+        return proposed
+    }
+    
+    var swiftUI: some View {
+        GeometryReader { proxy in
+            content(proxy.size).swiftUI
+        }
+    }
+}
+
 extension View_ {
     func border(_ color: NSColor, width: CGFloat) -> some View_ {
         Border(color: color, width: width, content: self)
+    }
+    
+    func overlay<O: View_>(_ overlay: O, alignment: Alignment_ = .center) -> some View_ {
+        Overlay(content: self, overlay: overlay, alignment: alignment)
     }
 }

@@ -8,14 +8,6 @@
 import SwiftUI
 import Foundation
 
-var sample: some View_ {
-    Ellipse_()
-        .frame(width: 200, height: 100)
-        .border(NSColor.blue, width: 2)
-        .frame(width: 300, height: 300, alignment: .topLeading)
-        .border(NSColor.yellow, width: 2)
-}
-
 func render<V: View_>(view: V, size: CGSize) -> Data {
     return CGContext.pdf(size: size) { context in
         view
@@ -26,8 +18,20 @@ func render<V: View_>(view: V, size: CGSize) -> Data {
 
 struct ContentView: View {
     @State var opacity: Double = 0.5
+    @State var width: CGFloat = 300
+    
     let size = CGSize(width: 600, height: 400)
 
+    var sample: some View_ {
+        Ellipse_()
+            .overlay(GeometryReader_ { size in
+                Text_("\(Int(size.width))x\(Int(size.height))")
+            })
+            .border(NSColor.blue, width: 2)
+            .frame(width: width.rounded(), height: 300)
+            .border(NSColor.yellow, width: 2)
+    }
+    
     var body: some View {
         VStack {
             ZStack {
@@ -37,6 +41,10 @@ struct ContentView: View {
                     .opacity(opacity)
             }
             Slider(value: $opacity, in: 0...1)
+            HStack {
+                Text("Width \(width.rounded())")
+                Slider(value: $width, in: 0...600)
+            }
         }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

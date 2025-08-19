@@ -21,10 +21,7 @@ struct FixedFrame<Content: View_>: View_, BuiltinView {
     func render(context: RenderingContext, size: ProposedSize) {
         context.saveGState()
         let childSize = content._size(proposed: size)
-        
-        let selfPoint = alignment.point(for: size)
-        let childPoint = alignment.point(for: childSize)
-        context.translateBy(x: selfPoint.x - childPoint.x, y: selfPoint.y - childPoint.y)
+        context.align(childSize, in: size, alignment: alignment)
         content._render(context: context, size: childSize)
         context.restoreGState()
     }
@@ -37,5 +34,13 @@ struct FixedFrame<Content: View_>: View_, BuiltinView {
 extension View_ {
     func frame(width: CGFloat? = nil, height: CGFloat? = nil, alignment: Alignment_ = .center) -> some View_ {
         FixedFrame(width: width, height: height, alignment: alignment, content: self)
+    }
+}
+
+extension RenderingContext {
+    func align(_ childSize: CGSize, in parentSize: CGSize, alignment: Alignment_) {
+        let parentPoint = alignment.point(for: parentSize)
+        let childPoint = alignment.point(for: childSize)
+        translateBy(x: parentPoint.x - childPoint.x, y: parentPoint.y - childPoint.y)
     }
 }
