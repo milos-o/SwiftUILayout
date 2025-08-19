@@ -15,7 +15,14 @@ struct Alignment_ {
     }
     
     static let center = Self(horizontal: .center, vertical: .center)
+    static let leading = Self(horizontal: .leading, vertical: .center)
+    static let trailing = Self(horizontal: .trailing, vertical: .center)
+    static let top = Self(horizontal: .center , vertical: .top)
     static let topLeading = Self(horizontal: .leading, vertical: .top)
+    static let topTrailing = Self(horizontal: .trailing, vertical: .top)
+    static let bottom = Self(horizontal: .center , vertical: .bottom)
+    static let bottomLeading = Self(horizontal: .leading, vertical: .bottom)
+    static let bottomTrailing = Self(horizontal: .trailing, vertical: .bottom)
 }
 
 struct HorizontalAlignment_ {
@@ -33,6 +40,7 @@ struct VerticalAlignment_ {
     
     static let top = Self(alignmentID: VTop.self, swiftUI: .top)
     static let center = Self(alignmentID: VCenter.self, swiftUI: .center)
+    static let bottom = Self(alignmentID: VBottom.self, swiftUI: .bottom)
 }
 
 protocol AlignmentID {
@@ -45,6 +53,10 @@ enum VTop: AlignmentID {
 
 enum VCenter: AlignmentID {
     static func defaultValue(in context: CGSize) -> CGFloat { context.height/2 }
+}
+
+enum VBottom: AlignmentID {
+    static func defaultValue(in context: CGSize) -> CGFloat { 0 }
 }
 
 enum HLeading: AlignmentID {
