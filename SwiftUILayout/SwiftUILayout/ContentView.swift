@@ -19,11 +19,16 @@ func render<V: View_>(view: V, size: CGSize) -> Data {
 struct ContentView: View {
     @State var opacity: Double = 0.5
     @State var width: CGFloat = 300
-    
+    @State var minWidth: (CGFloat, enabled: Bool) = (100, true)
+    @State var maxWidth: (CGFloat, enabled: Bool) = (400, true)
+
     let size = CGSize(width: 600, height: 400)
 
     var sample: some View_ {
         Ellipse_()
+            .foregroundColor(.red)
+            .frame(width: 150)
+            .frame(minWidth: minWidth.enabled ? minWidth.0.rounded() : nil, maxWidth: maxWidth.enabled ? maxWidth.0.rounded() : nil)
             .overlay(GeometryReader_ { size in
                 Text_("\(Int(size.width))x\(Int(size.height))")
             })
@@ -44,6 +49,16 @@ struct ContentView: View {
             HStack {
                 Text("Width \(width.rounded())")
                 Slider(value: $width, in: 0...600)
+            }
+            HStack {
+                Text("Min Width \(minWidth.0.rounded())")
+                Slider(value: $minWidth.0, in: 0...600)
+                Toggle("", isOn: $minWidth.enabled)
+            }
+            HStack {
+                Text("Max Width \(maxWidth.0.rounded())")
+                Slider(value: $maxWidth.0, in: 0...600)
+                Toggle("", isOn: $maxWidth.enabled)
             }
         }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
