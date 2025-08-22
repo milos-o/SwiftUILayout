@@ -25,7 +25,8 @@ struct ContentView: View {
     let size = CGSize(width: 600, height: 400)
 
     var sample: some View_ {
-        Ellipse_()
+        Text_("Hello World")
+            .fixedSize()
             .foregroundColor(.red)
             .frame(width: 150)
             .frame(minWidth: minWidth.enabled ? minWidth.0.rounded() : nil, maxWidth: maxWidth.enabled ? maxWidth.0.rounded() : nil)

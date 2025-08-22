@@ -36,7 +36,7 @@ struct Overlay<Content: View_, O: View_>: View_, BuiltinView {
     
     func render(context: RenderingContext, size: CGSize) {
         content._render(context: context, size: size)
-        let childSize = overlay._size(proposed: size)
+        let childSize = overlay._size(proposed: ProposedSize(size))
         context.saveGState()
         context.align(childSize, in: size, alignment: alignment)
         overlay._render(context: context, size: childSize)
@@ -57,7 +57,7 @@ struct GeometryReader_<Content: View_>: View_, BuiltinView {
     
     func render(context: RenderingContext, size: CGSize) {
         let child = content(size)
-        let childSize = child._size(proposed: size)
+        let childSize = child._size(proposed: ProposedSize(size))
         context.saveGState()
         context.align(childSize, in: size, alignment: .topLeading)
         child._render(context: context, size: childSize)
@@ -65,7 +65,7 @@ struct GeometryReader_<Content: View_>: View_, BuiltinView {
     }
     
     func size(proposed: ProposedSize) -> CGSize {
-        return proposed
+        return proposed.orDefault
     }
     
     var swiftUI: some View {
@@ -82,5 +82,30 @@ extension View_ {
     
     func overlay<O: View_>(_ overlay: O, alignment: Alignment_ = .center) -> some View_ {
         Overlay(content: self, overlay: overlay, alignment: alignment)
+    }
+    
+    func fixedSize(horizontal: Bool = true, vertical: Bool = true) -> some View_ {
+        FixedSize(content: self, horizontal: horizontal, vertical: vertical)
+    }
+}
+
+struct FixedSize<Content: View_>: View_, BuiltinView {
+    var content: Content
+    var horizontal: Bool
+    var vertical: Bool
+    
+    func render(context: RenderingContext, size: CGSize) {
+        content._render(context: context, size: size)
+    }
+    
+    func size(proposed p: ProposedSize) -> CGSize {
+        var proposed = p
+        if horizontal { proposed.width = nil }
+        if vertical { proposed.height = nil }
+        return content._size(proposed: proposed)
+    }
+    
+    var swiftUI: some View {
+        content.swiftUI.fixedSize(horizontal: horizontal, vertical: vertical)
     }
 }
