@@ -25,6 +25,22 @@ struct ContentView: View {
     let size = CGSize(width: 600, height: 400)
 
     var sample: some View_ {
+        HStack_(children: [
+            AnyView_(
+                Rectangle_()
+                    .frame(height: 100)
+                    .foregroundColor(.red)
+            ),
+            AnyView_(
+                Rectangle_()
+                    .frame(height: 100)
+                    .foregroundColor(.blue)
+            )
+        ])
+        .frame(width: width.rounded(), height: 300)
+    }
+    
+    var textExample: some View_ {
         Text_("Hello World")
             .fixedSize()
             .foregroundColor(.red)
@@ -39,29 +55,21 @@ struct ContentView: View {
     }
     
     var body: some View {
-        VStack {
-            ZStack {
-                Image(nsImage: NSImage(data: render(view: sample, size: size))!)
-                    .opacity(1-opacity)
-                sample.swiftUI.frame(width: size.width, height: size.height)
-                    .opacity(opacity)
-            }
-            Slider(value: $opacity, in: 0...1)
-            HStack {
-                Text("Width \(width.rounded())")
-                Slider(value: $width, in: 0...600)
-            }
-            HStack {
-                Text("Min Width \(minWidth.0.rounded())")
-                Slider(value: $minWidth.0, in: 0...600)
-                Toggle("", isOn: $minWidth.enabled)
-            }
-            HStack {
-                Text("Max Width \(maxWidth.0.rounded())")
-                Slider(value: $maxWidth.0, in: 0...600)
-                Toggle("", isOn: $maxWidth.enabled)
-            }
-        }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
+          VStack {
+              ZStack {
+                  Image(nsImage: NSImage(data: render(view: sample, size: size))!)
+                      .opacity(1-opacity)
+                  sample.swiftUI.frame(width: size.width, height: size.height)
+                      .opacity(opacity)
+              }
+              Slider(value: $opacity, in: 0...1)
+                  .padding()
+              HStack {
+                  Text("Width \(width.rounded())")
+                  Slider(value: $width, in: 0...600)
+              }.padding()
+          }
+          .frame(maxWidth: .infinity)
+          .frame(height: 1080/2)
+      }
 }
