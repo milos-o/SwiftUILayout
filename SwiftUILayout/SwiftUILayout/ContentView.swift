@@ -28,16 +28,18 @@ struct ContentView: View {
         HStack_(children: [
             AnyView_(
                 Rectangle_()
-                    .frame(height: 100)
-                    .foregroundColor(.red)
+                    .frame(minWidth: 150, maxWidth: 250)
+                    .foregroundColor(.blue)
+                    .measured
             ),
             AnyView_(
                 Rectangle_()
-                    .frame(height: 100)
-                    .foregroundColor(.blue)
+                    .frame(maxWidth: 100)
+                    .foregroundColor(.red)
+                    .measured
             )
-        ])
-        .frame(width: width.rounded(), height: 300)
+        ], alignment: .top)
+        .frame(width: width.rounded(), height: 100)
     }
     
     var textExample: some View_ {

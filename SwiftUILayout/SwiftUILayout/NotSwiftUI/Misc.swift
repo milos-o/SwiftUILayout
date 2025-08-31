@@ -89,6 +89,14 @@ extension View_ {
     }
 }
 
+extension View_ {
+    var measured: some View_ {
+        overlay(GeometryReader_ { size in
+            Text_("\(Int(size.width))")
+        })
+    }
+}
+
 struct FixedSize<Content: View_>: View_, BuiltinView {
     var content: Content
     var horizontal: Bool
