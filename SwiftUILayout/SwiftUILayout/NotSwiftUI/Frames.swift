@@ -13,6 +13,15 @@ struct FixedFrame<Content: View_>: View_, BuiltinView {
     var alignment: Alignment_
     var content: Content
     
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        let childSize = content._size(proposed: ProposedSize(size))
+        if let customX = content._customAlignment(for: alignment, in: childSize) {
+            let t = translation(for: content, in: size, childSize: childSize, alignment: self.alignment)
+            return t.x + customX
+        }
+        return nil
+    }
+    
     func size(proposed: ProposedSize) -> CGSize {
         let childSize = content._size(proposed: ProposedSize(width: width ?? proposed.width, height: height ?? proposed.height))
         return CGSize(width: width ?? childSize.width, height: height ?? childSize.height)
@@ -21,7 +30,8 @@ struct FixedFrame<Content: View_>: View_, BuiltinView {
     func render(context: RenderingContext, size: CGSize) {
         context.saveGState()
         let childSize = content._size(proposed: ProposedSize(size))
-        context.align(childSize, in: size, alignment: alignment)
+        let t = translation(for: content, in: size, childSize: childSize, alignment: alignment)
+        context.translateBy(x: t.x, y: t.y)
         content._render(context: context, size: childSize)
         context.restoreGState()
     }
@@ -40,6 +50,10 @@ struct FlexibleFrame<Content: View_>: View_, BuiltinView {
     var maxHeight: CGFloat?
     var alignment: Alignment_
     var content: Content
+    
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        fatalError()
+    }
     
     func size(proposed p: ProposedSize) -> CGSize {
         var proposed = ProposedSize(width: p.width ?? idealWidth, height: p.height ?? idealHeight).orDefault
@@ -74,7 +88,7 @@ struct FlexibleFrame<Content: View_>: View_, BuiltinView {
     func render(context: RenderingContext, size: CGSize) {
         context.saveGState()
         let childSize = content._size(proposed: ProposedSize(size))
-        context.align(childSize, in: size, alignment: alignment)
+        fatalError()
         content._render(context: context, size: childSize)
         context.restoreGState()
     }
@@ -120,10 +134,27 @@ extension View_ {
     }
 }
 
-extension RenderingContext {
-    func align(_ childSize: CGSize, in parentSize: CGSize, alignment: Alignment_) {
+extension  View_ {
+    func translation<V: View_>(for childView: V, in parentSize: CGSize, childSize: CGSize, alignment: Alignment_) -> CGPoint {
         let parentPoint = alignment.point(for: parentSize)
-        let childPoint = alignment.point(for: childSize)
-        translateBy(x: parentPoint.x - childPoint.x, y: parentPoint.y - childPoint.y)
+        var childPoint = alignment.point(for: childSize)
+        if let customX = childView._customAlignment(for: alignment.horizontal, in: childSize) {
+            childPoint.x = customX
+        }
+        // TODO vertical axis
+        return CGPoint(x: parentPoint.x - childPoint.x, y: parentPoint.y - childPoint.y)
+    }
+    
+    func translation<V: View_>(for sibling: V, in size: CGSize, siblingSize: CGSize, alignment: Alignment_) -> CGPoint {
+        var selfPoint = alignment.point(for: size)
+        if let customX = self._customAlignment(for: alignment.horizontal, in: size) {
+            selfPoint.x = customX
+        }
+        var childPoint = alignment.point(for: siblingSize)
+        if let customX = sibling._customAlignment(for: alignment.horizontal, in: siblingSize) {
+            childPoint.x = customX
+        }
+        // TODO vertical axis
+        return CGPoint(x: selfPoint.x - childPoint.x, y: selfPoint.y - childPoint.y)
     }
 }

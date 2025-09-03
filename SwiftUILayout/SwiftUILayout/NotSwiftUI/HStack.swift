@@ -21,6 +21,10 @@ struct HStack_: View_, BuiltinView {
     let spacing: CGFloat? = 0
     @LayoutState var sizes: [CGSize] = []
     
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        fatalError("todo")
+    }
+    
     func render(context: RenderingContext, size: CGSize) {
         let stackY = alignment.alignmentID.defaultValue(in: size)
         var currentX: CGFloat = 0
@@ -78,6 +82,10 @@ struct HStack_: View_, BuiltinView {
 }
 
 class AnyViewBase: BuiltinView {
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        fatalError()
+    }
+    
     func render(context: RenderingContext, size: CGSize) {
         fatalError()
     }
@@ -92,6 +100,10 @@ final class AnyViewImpl<V: View_> : AnyViewBase {
     
     init(_ view: V) {
         self.view = view
+    }
+    
+    override func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        view._customAlignment(for: alignment, in: size)
     }
     
     override func render(context: RenderingContext, size: CGSize) {
@@ -110,6 +122,10 @@ struct AnyView_: View_, BuiltinView {
     init<V: View_>(_ view: V) {
         self.swiftUI = AnyView(view.swiftUI)
         self.impl = AnyViewImpl(view)
+    }
+    
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        impl.customAlignment(for: alignment, in: size)
     }
     
     func render(context: RenderingContext, size: CGSize) {

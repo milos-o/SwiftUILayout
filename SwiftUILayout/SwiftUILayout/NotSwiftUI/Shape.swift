@@ -45,6 +45,10 @@ struct AnyShape: Shape {
 struct ShapeView<S: Shape_>: BuiltinView, View_ {
     var shape: S
     
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        return nil
+    }
+    
     func size(proposed: ProposedSize) -> CGSize {
         proposed.orDefault
     }
@@ -82,6 +86,10 @@ extension View_ {
 struct ForegroundColor<Content: View_>: View_, BuiltinView {
     var content: Content
     var color: NSColor
+    
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        content._customAlignment(for: alignment, in: size)
+    }
     
     func render(context: RenderingContext, size: CGSize) {
         context.saveGState()

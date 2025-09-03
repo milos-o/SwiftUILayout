@@ -27,6 +27,10 @@ struct Text_: View_, BuiltinView {
         return CTFramesetterCreateWithAttributedString(str)
     }
     
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        return nil
+    }
+    
     func render(context: RenderingContext, size: CGSize) {
         let path = CGPath(rect: CGRect(origin: .zero, size: size), transform: nil)
         let frame = CTFramesetterCreateFrame(framesetter, CFRange(), path, nil)

@@ -40,6 +40,7 @@ extension ProposedSize {
 protocol BuiltinView {
     func render(context: RenderingContext, size: CGSize)
     func size(proposed: ProposedSize) -> CGSize
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat?
     typealias Body = Never
 }
 
@@ -55,6 +56,14 @@ extension Never: View_ {
 }
 
 extension View_ {
+    func _customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        if let builtin = self as? BuiltinView {
+           return builtin.customAlignment(for: alignment, in: size)
+        } else {
+           return body._customAlignment(for: alignment, in: size)
+        }
+    }
+    
     func _render(context: RenderingContext, size: CGSize) {
         if let builtin = self as? BuiltinView {
             builtin.render(context: context, size: size)
