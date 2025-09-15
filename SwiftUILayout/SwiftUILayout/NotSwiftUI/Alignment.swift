@@ -98,6 +98,10 @@ struct CustomHAlignmentGuide<Content: View_>: View_, BuiltinView {
     var alignment: HorizontalAlignment_
     var computeValue: (CGSize) -> CGFloat
         
+    var layoutPriority: Double {
+        content._layoutPriority
+    }
+    
     func render(context: RenderingContext, size: CGSize) {
         content._render(context: context, size: size)
     }

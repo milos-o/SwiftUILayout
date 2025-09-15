@@ -21,6 +21,10 @@ struct Overlay<Content: View_, O: View_>: View_, BuiltinView {
     let overlay: O
     let alignment: Alignment_
     
+    var layoutPriority: Double {
+        content._layoutPriority
+    }
+    
     func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
         content._customAlignment(for: alignment, in: size)
     }
@@ -46,6 +50,8 @@ struct Overlay<Content: View_, O: View_>: View_, BuiltinView {
 
 struct GeometryReader_<Content: View_>: View_, BuiltinView {
     let content: (CGSize) -> Content
+    
+    var layoutPriority: Double { 0 }
     
     func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
         return nil
@@ -101,6 +107,10 @@ struct FixedSize<Content: View_>: View_, BuiltinView {
     var horizontal: Bool
     var vertical: Bool
     
+    var layoutPriority: Double {
+        content._layoutPriority
+    }
+    
     func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
         content._customAlignment(for: alignment, in: size)
     }
@@ -118,5 +128,33 @@ struct FixedSize<Content: View_>: View_, BuiltinView {
     
     var swiftUI: some View {
         content.swiftUI.fixedSize(horizontal: horizontal, vertical: vertical)
+    }
+}
+
+struct LayoutPriority<Content: View_>: View_, BuiltinView {
+    var content: Content
+    var layoutPriority: Double
+    
+  
+    func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
+        content._customAlignment(for: alignment, in: size)
+    }
+    
+    func render(context: RenderingContext, size: CGSize) {
+        content._render(context: context, size: size)
+    }
+    
+    func size(proposed: ProposedSize) -> CGSize {
+        content._size(proposed: proposed)
+    }
+    
+    var swiftUI: some View {
+        content.swiftUI.layoutPriority(layoutPriority)
+    }
+}
+
+extension View_ {
+    func layoutPriority(_ value: Double) -> some View_ {
+        LayoutPriority(content: self, layoutPriority: value)
     }
 }

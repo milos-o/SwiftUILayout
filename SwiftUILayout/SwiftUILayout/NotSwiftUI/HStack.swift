@@ -15,19 +15,13 @@ final class LayoutState<A> {
     }
 }
 
-extension Array where Element == CGFloat {
-    func average() -> CGFloat? {
-        guard !isEmpty else { return nil }
-        let factor = 1/CGFloat(count)
-        return map { $0 * factor }.reduce(0, +)
-    }
-}
-
 struct HStack_: View_, BuiltinView {
     var children: [AnyView_]
     var alignment: VerticalAlignment_ = .center
     let spacing: CGFloat? = 0
     @LayoutState var sizes: [CGSize] = []
+    
+    var layoutPriority: Double { 0 }
     
     func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
         if alignment.builtin { return nil }
@@ -75,28 +69,50 @@ struct HStack_: View_, BuiltinView {
     }
     
     private func layout(proposed: ProposedSize) {
-        let flexibility: [CGFloat] = children.map { child in
+        let flexibility: [LayoutInfo] = children.indices.map { idx in
+            let child = children[idx]
             let lower = child.size(proposed: ProposedSize(width: 0, height: proposed.height)).width
             let upper = child.size(proposed: ProposedSize(width: .greatestFiniteMagnitude, height: proposed.height)).width
-            return upper-lower
-        }
-        var remainingIndices = children.indices.sorted { l, r in
-            flexibility[l] < flexibility[r]
-        }
-        var remainingWidth = proposed.width! // todo
+            return LayoutInfo(minWidth: lower, maxWidth: upper, idx: idx, priority: child.layoutPriority)
+        }.sorted()
+        var groups = flexibility.group(by: \.priority)
         var sizes: [CGSize] = Array(repeating: .zero, count: children.count)
-        
-        while !remainingIndices.isEmpty {
-            let width = remainingWidth / CGFloat(remainingIndices.count)
-            let idx = remainingIndices.removeFirst()
-            let child = children[idx]
-            let size = child.size(proposed: ProposedSize(width: width, height: proposed.height))
-            sizes[idx] = size
-            remainingWidth -= size.width
-            if remainingWidth < 0 { remainingWidth = 0 }
+        let allMinWidths = flexibility.map(\.minWidth).reduce(0, +)
+        var remainingWidth = proposed.width! - allMinWidths // TODO force unwrap
+
+        while !groups.isEmpty {
+            let group = groups.removeFirst()
+            remainingWidth += group.map(\.minWidth).reduce(0, +)
+            var remainingIndices = group.map { $0.idx }
+            
+            while !remainingIndices.isEmpty {
+                let width = remainingWidth / CGFloat(remainingIndices.count)
+                let idx = remainingIndices.removeFirst()
+                let child = children[idx]
+                let size = child.size(proposed: ProposedSize(width: width, height: proposed.height))
+                sizes[idx] = size
+                remainingWidth -= size.width
+                if remainingWidth < 0 { remainingWidth = 0 }
+            }
         }
-        
         self.sizes = sizes
+    }
+}
+
+struct LayoutInfo: Comparable {
+    var minWidth: CGFloat
+    var maxWidth: CGFloat
+    var idx: Int
+    var priority: Double
+    
+    static func <(_ l: LayoutInfo, _ r: LayoutInfo) -> Bool {
+        if l.priority > r.priority { return true }
+        if r.priority > l.priority { return false }
+        return l.flexibility < r.flexibility
+    }
+    
+    var flexibility: CGFloat {
+        maxWidth - minWidth
     }
 }
 
@@ -110,6 +126,10 @@ class AnyViewBase: BuiltinView {
     }
     
     func size(proposed: ProposedSize) -> CGSize {
+        fatalError()
+    }
+    
+    var layoutPriority: Double {
         fatalError()
     }
 }
@@ -132,6 +152,10 @@ final class AnyViewImpl<V: View_> : AnyViewBase {
     override func size(proposed: ProposedSize) -> CGSize {
         view._size(proposed: proposed)
     }
+    
+    override var layoutPriority: Double {
+        view._layoutPriority
+    }
 }
 
 struct AnyView_: View_, BuiltinView {
@@ -141,6 +165,10 @@ struct AnyView_: View_, BuiltinView {
     init<V: View_>(_ view: V) {
         self.swiftUI = AnyView(view.swiftUI)
         self.impl = AnyViewImpl(view)
+    }
+    
+    var layoutPriority: Double {
+        impl.layoutPriority
     }
     
     func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {

@@ -13,6 +13,10 @@ struct FixedFrame<Content: View_>: View_, BuiltinView {
     var alignment: Alignment_
     var content: Content
     
+    var layoutPriority: Double {
+        content._layoutPriority
+    }
+    
     func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
         let childSize = content._size(proposed: ProposedSize(size))
         if let customX = content._customAlignment(for: alignment, in: childSize) {
@@ -50,6 +54,10 @@ struct FlexibleFrame<Content: View_>: View_, BuiltinView {
     var maxHeight: CGFloat?
     var alignment: Alignment_
     var content: Content
+    
+    var layoutPriority: Double {
+        content._layoutPriority
+    }
     
     func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
         let childSize = content._size(proposed: ProposedSize(size))

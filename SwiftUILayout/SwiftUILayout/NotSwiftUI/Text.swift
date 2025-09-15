@@ -27,6 +27,8 @@ struct Text_: View_, BuiltinView {
         return CTFramesetterCreateWithAttributedString(str)
     }
     
+    var layoutPriority: Double { 0 }
+    
     func customAlignment(for alignment: HorizontalAlignment_, in size: CGSize) -> CGFloat? {
         return nil
     }

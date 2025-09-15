@@ -42,16 +42,26 @@ struct ContentView: View {
         HStack_(children: [
             AnyView_(Rectangle_()
                 .foregroundColor(NSColor.red)
-                .frame(width: 150, height: 50)
-                .alignmentGuide(for: .leading) { dimension in
-                    dimension.width/2
-                }),
+                .frame(minWidth: 50)
+                .measured),
             AnyView_(Rectangle_()
                 .foregroundColor(NSColor.green)
-                .frame(width: 100, height: 50)
-                .alignmentGuide(for: .leading) { dimension in
-                    dimension.width/2
-                })
+                .frame(width: 30)
+                .layoutPriority(2)
+                .measured),
+            AnyView_(Rectangle_()
+                .foregroundColor(NSColor.yellow)
+                .frame(minWidth: 50)
+                .layoutPriority(1)
+                .measured),
+            AnyView_(Rectangle_()
+                .foregroundColor(NSColor.blue)
+                .layoutPriority(2)
+                .measured),
+            AnyView_(Rectangle_()
+                .foregroundColor(NSColor.orange)
+                .frame(minWidth: 100, maxWidth: 120)
+                .measured),
         ])
         .frame(width: 400, height: 200, alignment: Alignment_(horizontal: .leading, vertical: .center))
         .border(NSColor.white, width: 1)

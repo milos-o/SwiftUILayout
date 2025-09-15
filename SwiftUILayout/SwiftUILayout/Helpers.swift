@@ -20,3 +20,30 @@ extension CGContext {
         return pdfData as Data
     }
 }
+
+extension Array {
+    // expectes the array to be sorted by groupId
+    func group<A: Equatable>(by groupId: (Element) -> A) -> [[Element]] {
+        guard !isEmpty else { return [] }
+        var groups: [[Element]] = []
+        var currentGroup: [Element] = [self[0]]
+        for element in dropFirst() {
+            if groupId(currentGroup[0]) == groupId(element) {
+                currentGroup.append(element)
+            } else {
+                groups.append(currentGroup)
+                currentGroup = [element]
+            }
+        }
+        groups.append(currentGroup)
+        return groups
+    }
+}
+
+extension Array where Element: BinaryFloatingPoint {
+    func average() -> Element? {
+        guard !isEmpty else { return nil }
+        let factor = 1/Element(count)
+        return map { $0 * factor }.reduce(0,+)
+    }
+}
