@@ -16,6 +16,20 @@ func render<V: View_>(view: V, size: CGSize) -> Data {
     }
 }
 
+enum MyLeading: AlignmentID, SwiftUI.AlignmentID {
+    static func defaultValue(in context: ViewDimensions) -> CGFloat {
+        0
+    }
+    
+    static func defaultValue(in context: CGSize) -> CGFloat {
+        0
+    }
+}
+
+extension HorizontalAlignment_ {
+    static let myLeading  = HorizontalAlignment_(alignmentID: MyLeading.self, swiftUI: HorizontalAlignment( MyLeading.self))
+}
+
 struct ContentView: View {
     @State var opacity: Double = 0.5
     @State var width: CGFloat = 300
@@ -25,14 +39,22 @@ struct ContentView: View {
     let size = CGSize(width: 600, height: 400)
 
     var sample: some View_ {
-        Rectangle_()
-            .foregroundColor(.gray)
-            .frame(width: 200, height: 200)
-            .alignmentGuide(for: .center) { size in
-                size.width
-            }
-            .border(.blue, width: 2)
-            .frame(width: width.rounded(), height: 300, alignment: .center)
+        HStack_(children: [
+            AnyView_(Rectangle_()
+                .foregroundColor(NSColor.red)
+                .frame(width: 150, height: 50)
+                .alignmentGuide(for: .leading) { dimension in
+                    dimension.width/2
+                }),
+            AnyView_(Rectangle_()
+                .foregroundColor(NSColor.green)
+                .frame(width: 100, height: 50)
+                .alignmentGuide(for: .leading) { dimension in
+                    dimension.width/2
+                })
+        ])
+        .frame(width: 400, height: 200, alignment: Alignment_(horizontal: .leading, vertical: .center))
+        .border(NSColor.white, width: 1)
     }
     
     var textExample: some View_ {
