@@ -14,11 +14,11 @@ struct Text_: View_, BuiltinView {
         self.text = text
     }
     
-    let font = NSFont.systemFont(ofSize: 16)
+    let font = Font_.systemFont(ofSize: 16)
     var attributes: [NSAttributedString.Key: Any] {
         [
             .font: font,
-            .foregroundColor: NSColor.white
+            .foregroundColor: Color_.white
         ]
     }
     

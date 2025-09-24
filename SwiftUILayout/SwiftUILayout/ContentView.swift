@@ -6,10 +6,14 @@
 //
 
 import SwiftUI
-import Foundation
+#if os(macOS)
+import Cocoa
+#elseif os(iOS)
+import UIKit
+#endif
 
 func render<V: View_>(view: V, size: CGSize) -> Data {
-    return CGContext.pdf(size: size) { context in
+    return CGContext.image(size: size) { context in
         view
             .frame(width: size.width, height: size.height)
             ._render(context: context, size: size)
@@ -41,30 +45,19 @@ struct ContentView: View {
     var sample: some View_ {
         HStack_(children: [
             AnyView_(Rectangle_()
-                .foregroundColor(NSColor.red)
-                .frame(minWidth: 50)
+                .foregroundColor(Color_.red)
                 .measured),
             AnyView_(Rectangle_()
-                .foregroundColor(NSColor.green)
-                .frame(width: 30)
-                .layoutPriority(2)
+                .foregroundColor(Color_.green)
+                .frame(minWidth: 74)
                 .measured),
             AnyView_(Rectangle_()
-                .foregroundColor(NSColor.yellow)
-                .frame(minWidth: 50)
-                .layoutPriority(1)
-                .measured),
-            AnyView_(Rectangle_()
-                .foregroundColor(NSColor.blue)
-                .layoutPriority(2)
-                .measured),
-            AnyView_(Rectangle_()
-                .foregroundColor(NSColor.orange)
-                .frame(minWidth: 100, maxWidth: 120)
-                .measured),
+                .foregroundColor(Color_.yellow)
+                .frame(maxWidth: 23)
+                .measured)
         ])
-        .frame(width: 400, height: 200, alignment: Alignment_(horizontal: .leading, vertical: .center))
-        .border(NSColor.white, width: 1)
+        .frame(width: width, height: 200)
+        .border(Color_.white, width: 1)
     }
     
     var textExample: some View_ {
@@ -76,15 +69,15 @@ struct ContentView: View {
             .overlay(GeometryReader_ { size in
                 Text_("\(Int(size.width))x\(Int(size.height))")
             })
-            .border(NSColor.blue, width: 2)
+            .border(Color_.blue, width: 2)
             .frame(width: width.rounded(), height: 300)
-            .border(NSColor.yellow, width: 2)
+            .border(Color_.yellow, width: 2)
     }
     
     var body: some View {
           VStack {
               ZStack {
-                  Image(nsImage: NSImage(data: render(view: sample, size: size))!)
+                  Image(native: Image_(data: render(view: sample, size: size))!)
                       .opacity(1-opacity)
                   sample.swiftUI.frame(width: size.width, height: size.height)
                       .opacity(opacity)

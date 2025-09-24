@@ -68,11 +68,11 @@ struct HStack_: View_, BuiltinView {
         }
     }
     
-    private func layout(proposed: ProposedSize) {
+    func layout(proposed: ProposedSize) {
         let flexibility: [LayoutInfo] = children.indices.map { idx in
             let child = children[idx]
             let lower = child.size(proposed: ProposedSize(width: 0, height: proposed.height)).width
-            let upper = child.size(proposed: ProposedSize(width: .greatestFiniteMagnitude, height: proposed.height)).width
+            let upper = child.size(proposed: ProposedSize(width: 1e15, height: proposed.height)).width
             return LayoutInfo(minWidth: lower, maxWidth: upper, idx: idx, priority: child.layoutPriority)
         }.sorted()
         var groups = flexibility.group(by: \.priority)

@@ -21,7 +21,7 @@ extension Shape_ {
     }
 }
 
-extension NSColor: View_ {
+extension Color_: View_ {
     var body: some View_ {
         ShapeView(shape: Rectangle_()).foregroundColor(self)
     }
@@ -80,14 +80,14 @@ struct Ellipse_: Shape_ {
 }
 
 extension View_ {
-    func foregroundColor(_ color: NSColor) -> some View_ {
+    func foregroundColor(_ color: Color_) -> some View_ {
         ForegroundColor(content: self, color: color)
     }
 }
 
 struct ForegroundColor<Content: View_>: View_, BuiltinView {
     var content: Content
-    var color: NSColor
+    var color: Color_
     
     var layoutPriority: Double {
         content._layoutPriority

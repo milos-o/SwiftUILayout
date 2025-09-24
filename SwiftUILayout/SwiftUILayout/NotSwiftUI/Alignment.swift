@@ -62,7 +62,13 @@ protocol AlignmentID {
 }
 
 enum VTop: AlignmentID {
-    static func defaultValue(in context: CGSize) -> CGFloat { context.height }
+    static func defaultValue(in context: CGSize) -> CGFloat {
+        #if os(iOS)
+        return 0
+        #else
+        return context.height
+        #endif
+    }
 }
 
 enum VCenter: AlignmentID {
@@ -70,7 +76,13 @@ enum VCenter: AlignmentID {
 }
 
 enum VBottom: AlignmentID {
-    static func defaultValue(in context: CGSize) -> CGFloat { 0 }
+    static func defaultValue(in context: CGSize) -> CGFloat {
+        #if os(iOS)
+        return context.height
+        #else
+        return 0
+        #endif
+    }
 }
 
 enum HLeading: AlignmentID {

@@ -5,7 +5,11 @@
 //  Created by Milos on 17. 8. 2025..
 //
 
+#if os(macOS)
 import Cocoa
+#elseif os(iOS)
+import UIKit
+#endif
 
 extension CGContext {
     static func pdf(size: CGSize, render: (CGContext) -> ()) -> Data {
@@ -19,6 +23,16 @@ extension CGContext {
         pdfContext.closePDF()
         return pdfData as Data
     }
+    
+    static func image(size: CGSize, render: (CGContext) -> ()) -> Data {
+         #if os(macOS)
+         return pdf(size: size, render: render)
+         #elseif os(iOS)
+         return UIGraphicsImageRenderer(size: size).pngData(actions: { context in
+             render(context.cgContext)
+         })
+         #endif
+     }
 }
 
 extension Array {

@@ -7,6 +7,26 @@
 
 import SwiftUI
 
+#if os(macOS)
+typealias Color_ = NSColor
+typealias Font_ = NSFont
+typealias Image_ = NSImage
+#elseif os(iOS)
+typealias Color_ = UIColor
+typealias Font_ = UIFont
+typealias Image_ = UIImage
+#endif
+
+extension Image {
+    init(native: Image_) {
+        #if os(macOS)
+        self.init(nsImage: native)
+        #elseif os(iOS)
+        self.init(uiImage: native)
+        #endif
+    }
+}
+
 struct BorderShape: Shape_ {
     var width: CGFloat
 
@@ -58,16 +78,20 @@ struct GeometryReader_<Content: View_>: View_, BuiltinView {
     }
     
     func render(context: RenderingContext, size: CGSize) {
-        let child = content(size)
-        let childSize = child._size(proposed: ProposedSize(size))
-        context.saveGState()
-        let alignment = Alignment_.topLeading
-        let parentPoint = alignment.point(for: size)
-        let childPoint = alignment.point(for: childSize)
-        context.translateBy(x: parentPoint.x - childPoint.x, y: parentPoint.y - childPoint.y)
-        child._render(context: context, size: childSize)
-        context.restoreGState()
-    }
+          let child = content(size)
+          let childSize = child._size(proposed: ProposedSize(size))
+          context.saveGState()
+          #if os(iOS)
+          let alignment = Alignment_.topLeading
+          #else
+          let alignment = Alignment_.center
+          #endif
+          let parentPoint = alignment.point(for: size)
+          let childPoint = alignment.point(for: childSize)
+          context.translateBy(x: parentPoint.x-childPoint.x, y: parentPoint.y-childPoint.y)
+          child._render(context: context, size: childSize)
+          context.restoreGState()
+      }
     
     func size(proposed: ProposedSize) -> CGSize {
         return proposed.orDefault
@@ -81,7 +105,7 @@ struct GeometryReader_<Content: View_>: View_, BuiltinView {
 }
 
 extension View_ {
-    func border(_ color: NSColor, width: CGFloat) -> some View_ {
+    func border(_ color: Color_, width: CGFloat) -> some View_ {
         overlay(BorderShape(width: width).foregroundColor(color))
     }
     
